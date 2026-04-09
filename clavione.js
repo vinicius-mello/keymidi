@@ -3,7 +3,7 @@ HID.setDriverType('hidraw');
 var devices = HID.devices();
 var easymidi = require('easymidi');
 var outputs = easymidi.getOutputs();
-var output = new easymidi.Output(outputs[0]);
+var output = new easymidi.Output(outputs[1]);
 console.log(outputs)
 let notes = [
   [ 'Db1', 'E1' , 'G1' , 'Bb1'], 
@@ -75,7 +75,7 @@ function pitch(k, i, j) {
   let n = notes[i][j];
   let octave = parseInt(n.substr(-1));
   let name = n.substr(0, n.length-1);
-  return 36+12*k+12*octave+pitches[name];
+  return 24+12*k+12*octave+pitches[name];
 }
   
 
@@ -84,7 +84,7 @@ function noteOn(k, i, j) {
   output.send('noteon', {
     note: pitch(k, i, j),
     velocity: 100,
-    channel: 1
+    channel: i>=3 ? 0 : 1
   });
 }
 
@@ -93,6 +93,6 @@ function noteOff(k, i, j) {
   output.send('noteon', {
     note: pitch(k, i, j),
     velocity: 0,
-    channel: 1
+    channel: i>=3 ? 0 : 1
   });
 }

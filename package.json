@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "easymidi": "^3.1.0",
+    "node-hid": "^3.3.0"
+  }
+}

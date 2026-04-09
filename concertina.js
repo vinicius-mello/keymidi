@@ -85,7 +85,7 @@ function pitch(k, i, j) {
   let n = notes[k][i][j];
   let octave = parseInt(n.substr(-1));
   let name = n.substr(0, n.length-1);
-  return 12+12*octave+pitches[name];
+  return /*12+*/12*octave+pitches[name];
 }
   
 
@@ -94,7 +94,7 @@ function noteOn(k, i, j) {
   output.send('noteon', {
     note: pitch(k, i, j),
     velocity: 100,
-    channel: 1
+    channel: k
   });
 }
 
@@ -103,6 +103,6 @@ function noteOff(k, i, j) {
   output.send('noteon', {
     note: pitch(k, i, j),
     velocity: 0,
-    channel: 1
+    channel: k
   });
 }
