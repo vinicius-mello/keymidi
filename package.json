@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "blessed": "^0.1.81",
     "easymidi": "^3.1.0",
     "node-hid": "^3.3.0"
   }
