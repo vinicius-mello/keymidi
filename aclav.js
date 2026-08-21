@@ -1,6 +1,7 @@
 var HID = require("node-hid");
 var easymidi = require("easymidi");
 var blessed = require("blessed");
+var { identifyChord } = require("./chord");
 
 var outputs = easymidi.getOutputs();
 var output = new easymidi.Output(outputs[1]);
@@ -60,6 +61,7 @@ const header = blessed.box({
 });
 
 const GRID_HEIGHT = 9;
+const CHORD_HEIGHT = 5;
 
 const gridsContainer = blessed.box({
   top: 3,
@@ -68,12 +70,24 @@ const gridsContainer = blessed.box({
   height: GRID_HEIGHT,
 });
 
-const log = blessed.log({
-  label: ' events ',
+const chordBox = blessed.box({
+  label: ' acorde ',
   top: 3 + GRID_HEIGHT,
   left: 0,
   width: '100%',
-  height: `100%-${3 + GRID_HEIGHT + 1}`,
+  height: CHORD_HEIGHT,
+  border: { type: 'line' },
+  style: { border: { fg: 'brightmagenta' }, label: { fg: 'brightmagenta', bold: true } },
+  tags: true,
+  content: '',
+});
+
+const log = blessed.log({
+  label: ' events ',
+  top: 3 + GRID_HEIGHT + CHORD_HEIGHT,
+  left: 0,
+  width: '100%',
+  height: `100%-${3 + GRID_HEIGHT + CHORD_HEIGHT + 1}`,
   border: { type: 'line' },
   style: { border: { fg: 'brightwhite' }, label: { fg: 'brightwhite', bold: true } },
   tags: true,
@@ -93,6 +107,7 @@ const statusBar = blessed.box({
 
 screen.append(header);
 screen.append(gridsContainer);
+screen.append(chordBox);
 screen.append(log);
 screen.append(statusBar);
 
@@ -100,6 +115,30 @@ screen.key(['q', 'C-c'], () => process.exit(0));
 
 // One grid box per connected device, laid out side by side.
 const deviceGrids = [];
+
+// One key-state table per device; chord detection combines all of them.
+const deviceTables = [];
+
+function computeAllPitches() {
+  const active = [];
+  for (let idev = 0; idev < deviceTables.length; ++idev) {
+    const table = deviceTables[idev];
+    if (!table) continue;
+    for (let ti = 0; ti < 6; ++ti)
+      for (let tj = 0; tj < 4; ++tj)
+        if (table[ti][tj]) active.push(pitch(idev, ti, tj));
+  }
+  return active;
+}
+
+function updateChordDisplay() {
+  const chordName = identifyChord(computeAllPitches());
+  const rendered = chordName
+    ? `{bright-yellow-fg}{bold}${chordName}{/bold}{/bright-yellow-fg}`
+    : '{grey-fg}-{/grey-fg}';
+  chordBox.setContent(` ${rendered}`);
+  screen.render();
+}
 
 function labelFor(k, i, j) {
   return notes[i][j];
@@ -186,7 +225,7 @@ async function connectToDevice() {
         screen.render();
         return;
       }
-      var table =
+      deviceTables[idev] =
       [
         [ 0, 0 , 0, 0 ],
         [ 0, 0 , 0, 0 ],
@@ -195,6 +234,7 @@ async function connectToDevice() {
         [ 0, 0 , 0, 0 ],
         [ 0, 0 , 0, 0 ],
       ];
+      var table = deviceTables[idev];
       device.on("data", function(data) {
         if(data[0] == 0x21) return;
         for(let i=0; i<3; ++i) {
@@ -215,6 +255,7 @@ async function connectToDevice() {
               table[2*i+1][j] = 0;
             }
         }
+        updateChordDisplay();
       });
     });
 
