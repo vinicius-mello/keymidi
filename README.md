@@ -38,4 +38,9 @@ Conteúdo de `72-keymidi.rules`:
 
 ```
 SUBSYSTEM=="hidraw", ATTRS{idVendor}=="8089", ATTRS{idProduct}=="0008", TAG+="uaccess"
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="8089", ATTRS{idProduct}=="0009", TAG+="uaccess"
 ```
+
+A segunda linha libera o SayoDevice O3C (product `0x0009`), usado pelo
+`aclav.js` como controle extra: o dial ajusta a velocity das notas (o botão do
+dial volta para 100) e os três botões tocam F, Gb e G graves.
